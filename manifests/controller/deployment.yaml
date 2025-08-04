@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: packet-capture-controller
+  namespace: kube-system
+  labels:
+    app: packet-capture-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: packet-capture-controller
+  template:
+    metadata:
+      labels:
+        app: packet-capture-controller
+    spec:
+      serviceAccountName: packet-capture-controller
+      containers:
+      - name: controller
+        image: packet-capture-controller:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8443
+          name: webhook
+        volumeMounts:
+        - name: certs
+          mountPath: /etc/certs
+          readOnly: true
+        env:
+        - name: MAX_CAPTURE_FILES
+          valueFrom:
+            configMapKeyRef:
+              name: packet-capture-config
+              key: MAX_CAPTURE_FILES
+              optional: true
+        - name: MAX_CAPTURE_FILE_SIZE_MB
+          valueFrom:
+            configMapKeyRef:
+              name: packet-capture-config
+              key: MAX_CAPTURE_FILE_SIZE_MB
+              optional: true
+        - name: TLS_CERT_FILE
+          value: /etc/certs/tls.crt
+        - name: TLS_KEY_FILE
+          value: /etc/certs/tls.key
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: packet-capture-config
+              key: LOG_LEVEL
+              optional: true
+        - name: AGENT_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: packet-capture-config
+              key: AGENT_PORT
+              optional: true
+      volumes:
+      - name: certs
+        secret:
+          secretName: packet-capture-webhook-certs

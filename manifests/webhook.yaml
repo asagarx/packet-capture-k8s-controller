@@ -1,0 +1,57 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: packet-capture-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: kube-system/packet-capture-webhook-cert
+webhooks:
+- name: validate.packetcaptureconfigs.networking.packet.io
+  clientConfig:
+    service:
+      name: packet-capture-webhook
+      namespace: kube-system
+      path: "/validate"
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: ["networking.packet.io"]
+    apiVersions: ["v1"]
+    resources: ["packetcaptureconfigs"]
+  admissionReviewVersions: ["v1"]
+  sideEffects: None
+  failurePolicy: Fail
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: packet-capture-selfsigned-issuer
+  namespace: kube-system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: packet-capture-webhook-cert
+  namespace: kube-system
+spec:
+  secretName: packet-capture-webhook-certs
+  issuerRef:
+    name: packet-capture-selfsigned-issuer
+  dnsNames:
+  - packet-capture-webhook
+  - packet-capture-webhook.kube-system
+  - packet-capture-webhook.kube-system.svc
+  - packet-capture-webhook.kube-system.svc.cluster.local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: packet-capture-webhook
+  namespace: kube-system
+spec:
+  selector:
+    app: packet-capture-controller
+  ports:
+  - port: 443
+    targetPort: 8443
+    protocol: TCP
