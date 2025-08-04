@@ -18,7 +18,7 @@ spec:
       serviceAccountName: packet-capture-controller
       containers:
       - name: controller
-        image: packet-capture-controller:latest
+        image: packet-capture-controller:1.0.0
         imagePullPolicy: Always
         ports:
         - containerPort: 8443
