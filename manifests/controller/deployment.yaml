@@ -19,7 +19,6 @@ spec:
       containers:
       - name: controller
         image: packet-capture-controller:1.0.0
-        imagePullPolicy: Always
         ports:
         - containerPort: 8443
           name: webhook
